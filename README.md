@@ -1,52 +1,36 @@
-# Lil Debbie — Personal Memory Sanctuary & Cloud Vault
+# Lil Debbie's Private Birthday Website ❤️
 
-A timeless digital keepsake and memory website built for **Lil Debbie**, connected to your existing Supabase project (**`Samuel-kayode's Project`**, ref `jykolicnbfaddbznijtj`) and your existing GitHub repository (**`Samuel-kayode/lil-debbie-website`**).
-
----
-
-## 1. Architecture Overview
-
-- **Frontend Application (`Samuel-kayode/lil-debbie-website`)**:
-  - Built with **React 19 + TypeScript + Vite + Tailwind CSS v4**.
-  - Hosted as a static single-page web application (compatible with GitHub Pages, Cloudflare Pages, Vercel, or Netlify Free tiers).
-  - Contains **source code only**—strict `.gitignore` rules prevent any personal photos, videos, or audio files from ever being committed or pushed to GitHub.
-- **Database (`Samuel-kayode's Project` — Supabase PostgreSQL 17)**:
-  - Stores structured site settings, media metadata, milestone chapters, guestbook blessings, and journal letters with Row Level Security (RLS) enabled.
-- **Personal Media Storage (`lil-debbie-media` bucket in Supabase Storage)**:
-  - All personal photos, videos, and browser-recorded voice notes are uploaded directly from the browser to Supabase Storage (`lil-debbie-media`), bypassing GitHub completely.
-  - **Permanent Retention**: Zero lifecycle expiration or automatic deletion rules are configured.
+A playful, warm, mobile-first birthday experience crafted for **Lil Debbie**, backed by your existing **Supabase project (`Samuel-kayode's Project` — `jykolicnbfaddbznijtj`)** and your existing **GitHub repository (`Samuel-kayode/lil-debbie-website`)**.
 
 ---
 
-## 2. Resources Created in `"Samuel-kayode's Project"` (`jykolicnbfaddbznijtj`)
+## 1. Website Journey & Sections
 
-1. **PostgreSQL Tables (`public` schema)**:
-   - `public.site_settings` — Customizable site title, tagline, story, celebration date, hero portrait reference, and color theme (`warm-rose`, `golden-sun`, `lavender-dream`, `sage-garden`).
-   - `public.media_items` — Metadata (`title`, `caption`, `category`, `media_type`, `storage_path`, `public_url`, `file_size`, `taken_at`, `location`, `is_favorite`) for photos, videos, and voice notes stored in Supabase Storage.
-   - `public.milestones` — Chronological timeline of special moments and chapters.
-   - `public.guestbook_entries` — Love notes, wishes, and blessings from family and friends.
-   - `public.journal_posts` — Long-form letters and stories written for Lil Debbie.
-2. **Supabase Storage Bucket**:
-   - `lil-debbie-media` — Configured for images (`jpeg`, `png`, `webp`, `gif`, `avif`), videos (`mp4`, `webm`, `quicktime`), and audio (`mpeg`, `mp4`, `wav`, `ogg`) with RLS policies and **no automatic deletion or expiration**.
-3. **Database Migration**:
-   - `init_lil_debbie_schema_and_storage` applied directly to project `jykolicnbfaddbznijtj`.
+1. **Birthday Password Gate**:
+   - Protected by the **`birthday-gate` Supabase Edge Function** + server-side bcrypt verification (`verify_birthday_password_and_issue_session`) with rate limiting (5 failed attempts per 15-minute window) and short-lived visitor sessions.
+   - Visitor entrance passcode: **`062026`** (independent from your Owner Admin password).
+2. **Homepage**:
+   - Colourful illustrated birthday design in **Sunshine Yellow (`#FFC928`), Orange (`#FF8A32`), Cream (`#FFF3D1`), and Coral (`#F15B48`)** featuring an illustrated multi-tier birthday cake, floating balloons, bunting ribbons, stars, and hearts (never her photograph on the hero).
+   - Approved headline (`Happy Birthday, My Lil Debbie! ❤️`), approved body copy, and interactive buttons for **Wishes from your Bro.** and **Wishes from your Friend.**
+3. **Bro Section**:
+   - Heartfelt opening, drafted letter for owner review (covering her kindness, compassion, strength, the long WhatsApp conversation after discovering you were cousins, secondary school stories, how she taught you not to talk down on people, and your promise to always be there for her).
+   - Scrapbook-inspired individual photo frames with sweet, funny, and playful captions + click-to-enlarge lightbox.
+   - Custom audio player for your personal voice recording.
+4. **Friend Section**:
+   - Playful old-friends teasing tone with naturally scattered compliments (fair skin, eyes, small pointy nose, mouth, smile, contagious laugh, and figure).
+   - Showcase slot for the **Red-Gown Dancing Video**, **"Which hand?"** tiny-hands joke, **6:00 AM "Hi baby" morning voice notes**, **unprompted everyday photo/video updates**, **backside teasing joke**, **official request for more funny videos**, **caring non-guilt-inducing message about calling on difficult days**, and the **Private Intimate Keepsake Gallery** (served exclusively via short-lived signed URLs).
+5. **Final Surprise Section**:
+   - Unlocks after both the **Bro** and **Friend** sections have been explored.
+   - Written letter only (no voice note), displaying your **exact approved letter** unchanged.
+6. **Owner-Only Administrator Dashboard (`#admin`)**:
+   - Protected by **Supabase Auth** (`kayodeoluwabunmi2@gmail.com`) and database/storage RLS (`public.is_owner()`).
+   - Upload, preview, replace, reorder, and delete photos, videos, voice notes, and background music in the **private** `lil-debbie-media` bucket without touching code.
 
 ---
 
-## 3. 100% Free-Tier Operation & Guardrails
+## 2. Privacy & Security Architecture
 
-- **Supabase Free Plan**: Includes 500 MB PostgreSQL database storage, 1 GB Supabase file storage, and 5 GB bandwidth per month at **$0/month**.
-- **GitHub Free Plan**: Hosts the application source code at **$0/month**.
-- **No Paid Add-ons**: No paid services, compute add-ons, or billable features are enabled.
-- **No Automatic Deletion / Expiration**: Neither database rows nor Storage objects have TTL, cron cleanups, or lifecycle expiration rules.
-- **No Personal Media in GitHub**: `.gitignore` blocks all image, video, and audio extensions (`*.jpg`, `*.png`, `*.mp4`, `*.mov`, `*.mp3`, `*.wav`, etc.) and local media directories (`personal-media/`, `uploads/`, `media/`).
-
----
-
-## 4. Running Locally
-
-```bash
-npm install
-cp .env.example .env
-npm run dev
-```
+- **Private Storage Bucket (`lil-debbie-media`)**: Configured with `public = false` and owner-only RLS policies. Personal media is never committed to GitHub.
+- **Time-Limited Signed URLs**: Authorized visitors receive 15-minute signed URLs generated by the `birthday-gate` Edge Function.
+- **No Service-Role or Admin Credentials in Frontend**: Only the public `anon` key is used in the browser; privileged verification happens inside the Edge Function and `SECURITY DEFINER` PostgreSQL RPCs.
+- **No Automatic Deletion or Expiration**: Zero cron jobs, TTLs, or storage lifecycle expiration rules exist.

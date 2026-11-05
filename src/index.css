@@ -1,13 +1,116 @@
 @import "tailwindcss";
 
+:root {
+  --color-sunshine: #FFC928;
+  --color-orange: #FF8A32;
+  --color-cream: #FFF3D1;
+  --color-coral: #F15B48;
+  --color-ink: #2B1E1A;
+  --color-cloud: #FFFFFF;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #FFF3D1;
+    color: #2B1E1A;
   }
 }
 
-/* Subtle decorative background pattern */
-.bg-sanctuary-grid {
-  background-image: radial-gradient(rgba(244, 63, 94, 0.1) 1px, transparent 1px);
-  background-size: 24px 24px;
+.font-display {
+  font-family: 'Changa One', 'Fredoka', system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.font-playful {
+  font-family: 'Fredoka', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+.font-handwriting {
+  font-family: 'Caveat', cursive, sans-serif;
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(4deg);
+  }
+}
+
+@keyframes floatReverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(10px) rotate(-4deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes candleFlicker {
+  0%, 100% {
+    transform: scaleY(1) rotate(-2deg);
+  }
+  50% {
+    transform: scaleY(1.14) rotate(2deg);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 5.5s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 6.2s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.animate-candle {
+  transform-origin: bottom center;
+  animation: candleFlicker 1.4s ease-in-out infinite;
+}
+
+/* Scrapbook polaroid & washi tape utilities */
+.scrapbook-card {
+  background: #FFFFFF;
+  border: 2px solid #2B1E1A;
+  box-shadow: 6px 6px 0px #2B1E1A;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.scrapbook-card:hover {
+  transform: translateY(-4px) rotate(0deg) !important;
+  box-shadow: 8px 10px 0px #2B1E1A;
+}
+
+.storybook-btn {
+  border: 2.5px solid #2B1E1A;
+  box-shadow: 4px 4px 0px #2B1E1A;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.storybook-btn:hover {
+  transform: translate(-1px, -2px);
+  box-shadow: 6px 6px 0px #2B1E1A;
+}
+
+.storybook-btn:active {
+  transform: scale(0.96);
+  box-shadow: 2px 2px 0px #2B1E1A;
 }
