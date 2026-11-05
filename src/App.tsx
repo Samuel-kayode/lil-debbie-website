@@ -208,6 +208,20 @@ export default function App() {
     setGateError('');
     setRateLimitedInfo(null);
 
+    // Unlock browser audio playback context synchronously during the login button tap
+    try {
+      const AudioCtx =
+        window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(() => {});
+        }
+      }
+    } catch {
+      // Ignore if AudioContext is unavailable
+    }
+
     try {
       const res = await verifyBirthdayPasswordWithEdge(passwordInput.trim());
 

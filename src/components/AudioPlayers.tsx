@@ -18,9 +18,66 @@ export function BackgroundMusicController({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
+  const userPausedRef = useRef<boolean>(false);
   const prevSectionRef = useRef<string>(currentSection);
 
   const audioUrl = musicItem?.signed_url || null;
+
+  // Automatically start playing background music once the visitor logs in to the homepage
+  useEffect(() => {
+    const audioEl = audioRef.current;
+    if (!audioEl || !audioUrl || userPausedRef.current) return;
+
+    let cancelled = false;
+
+    const attemptAutoPlay = async () => {
+      if (cancelled || userPausedRef.current || !audioRef.current) return;
+      try {
+        await audioRef.current.play();
+        if (!cancelled) {
+          setPlaying(true);
+        }
+      } catch {
+        // Browser required one more user interaction after async login fetch;
+        // resume automatically on first touch/click/key anywhere on the page.
+        const resumeOnInteraction = async () => {
+          if (cancelled || userPausedRef.current || !audioRef.current) return;
+          try {
+            await audioRef.current.play();
+            if (!cancelled) {
+              setPlaying(true);
+            }
+            cleanupListeners();
+          } catch {
+            // Keep listeners if still blocked
+          }
+        };
+
+        const cleanupListeners = () => {
+          window.removeEventListener('pointerdown', resumeOnInteraction);
+          window.removeEventListener('touchstart', resumeOnInteraction);
+          window.removeEventListener('click', resumeOnInteraction);
+          window.removeEventListener('keydown', resumeOnInteraction);
+        };
+
+        window.addEventListener('pointerdown', resumeOnInteraction, { passive: true });
+        window.addEventListener('touchstart', resumeOnInteraction, { passive: true });
+        window.addEventListener('click', resumeOnInteraction, { passive: true });
+        window.addEventListener('keydown', resumeOnInteraction, { passive: true });
+
+        return cleanupListeners;
+      }
+    };
+
+    const cleanupPromise = attemptAutoPlay();
+
+    return () => {
+      cancelled = true;
+      Promise.resolve(cleanupPromise).then((cleanup) => {
+        if (typeof cleanup === 'function') cleanup();
+      });
+    };
+  }, [audioUrl]);
 
   useEffect(() => {
     if (prevSectionRef.current !== currentSection) {
@@ -35,9 +92,11 @@ export function BackgroundMusicController({
   const togglePlay = async () => {
     if (!audioRef.current || !audioUrl) return;
     if (playing) {
+      userPausedRef.current = true;
       audioRef.current.pause();
       setPlaying(false);
     } else {
+      userPausedRef.current = false;
       try {
         await audioRef.current.play();
         setPlaying(true);
@@ -72,8 +131,11 @@ export function BackgroundMusicController({
       <audio
         ref={audioRef}
         src={audioUrl}
+        autoPlay
         loop
-        preload="metadata"
+        preload="auto"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
         onEnded={() => setPlaying(false)}
       />
       <button
