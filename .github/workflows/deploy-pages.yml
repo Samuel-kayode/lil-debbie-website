@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: 'pages'
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -22,6 +22,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -33,6 +36,10 @@ jobs:
         run: npm ci
 
       - name: Build static frontend
+        env:
+          VITE_SUPABASE_URL: https://jykolicnbfaddbznijtj.supabase.co
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp5a29saWNuYmZhZGRiem5panRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM4MzkwMjIsImV4cCI6MjEwOTQxNTAyMn0.OUn-TavUKWxVzifqglz5YcBAkFEE_-bLepwuEebeIm4
+          VITE_SUPABASE_STORAGE_BUCKET: lil-debbie-media
         run: npm run build
 
       - name: Upload Pages artifact
@@ -49,4 +56,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
