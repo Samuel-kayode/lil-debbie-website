@@ -47,6 +47,30 @@ const VISITOR_TOKEN_STORAGE_KEY = 'lil_debbie_visitor_session_token';
 const VISITED_BRO_KEY = 'lil_debbie_visited_bro';
 const VISITED_FRIEND_KEY = 'lil_debbie_visited_friend';
 
+function safeSessionGet(key: string): string | null {
+  try {
+    return window.sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSessionSet(key: string, value: string): void {
+  try {
+    window.sessionStorage.setItem(key, value);
+  } catch {
+    // Ignore storage restriction on file:// or private browsing
+  }
+}
+
+function safeSessionRemove(key: string): void {
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch {
+    // Ignore storage restriction on file:// or private browsing
+  }
+}
+
 const BRO_PLACEHOLDER_SLOTS = [
   {
     id: 'bro-ph-1',
@@ -114,10 +138,10 @@ export default function App() {
 
   // Section Exploration Tracking for Final Surprise Unlock
   const [visitedBro, setVisitedBro] = useState<boolean>(() => {
-    return sessionStorage.getItem(VISITED_BRO_KEY) === 'true';
+    return safeSessionGet(VISITED_BRO_KEY) === 'true';
   });
   const [visitedFriend, setVisitedFriend] = useState<boolean>(() => {
-    return sessionStorage.getItem(VISITED_FRIEND_KEY) === 'true';
+    return safeSessionGet(VISITED_FRIEND_KEY) === 'true';
   });
 
   // Lightbox Modal for Click-to-Enlarge Photos & Videos
@@ -137,7 +161,7 @@ export default function App() {
 
   // Validate existing short-lived visitor token on page load
   const restoreOrRefreshVisitorSession = async () => {
-    const savedToken = sessionStorage.getItem(VISITOR_TOKEN_STORAGE_KEY);
+    const savedToken = safeSessionGet(VISITOR_TOKEN_STORAGE_KEY);
     if (!savedToken) {
       setCheckingSession(false);
       return;
@@ -152,7 +176,7 @@ export default function App() {
           setStage('home');
         }
       } else {
-        sessionStorage.removeItem(VISITOR_TOKEN_STORAGE_KEY);
+        safeSessionRemove(VISITOR_TOKEN_STORAGE_KEY);
         setVisitorAuthenticated(false);
       }
     } catch {
@@ -165,6 +189,52 @@ export default function App() {
   useEffect(() => {
     restoreOrRefreshVisitorSession();
   }, []);
+
+  useEffect(() => {
+    const onHashChange = () => {
+      if (window.location.hash === '#admin') {
+        setStage('admin');
+      } else if (stage === 'admin') {
+        setStage(visitorAuthenticated ? 'home' : 'gate');
+      }
+    };
+    const onPreviewNav = (e: Event) => {
+      const custom = e as CustomEvent<{ targetStage?: JourneyStage }>;
+      const target = custom.detail?.targetStage;
+      if (!target) return;
+      if (target === 'admin') {
+        window.location.hash = '#admin';
+        setStage('admin');
+      } else {
+        if (window.location.hash === '#admin') {
+          window.location.hash = '';
+        }
+        if (target === 'bro') {
+          setVisitedBro(true);
+          safeSessionSet(VISITED_BRO_KEY, 'true');
+        } else if (target === 'friend') {
+          setVisitedFriend(true);
+          safeSessionSet(VISITED_FRIEND_KEY, 'true');
+        } else if (target === 'surprise') {
+          setVisitedBro(true);
+          setVisitedFriend(true);
+          safeSessionSet(VISITED_BRO_KEY, 'true');
+          safeSessionSet(VISITED_FRIEND_KEY, 'true');
+        }
+        if (target !== 'gate') {
+          setVisitorAuthenticated(true);
+        }
+        setStage(target);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    window.addEventListener('lil-debbie-preview-nav', onPreviewNav);
+    return () => {
+      window.removeEventListener('hashchange', onHashChange);
+      window.removeEventListener('lil-debbie-preview-nav', onPreviewNav);
+    };
+  }, [stage, visitorAuthenticated]);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,7 +267,7 @@ export default function App() {
       }
 
       if (res.visitor_token) {
-        sessionStorage.setItem(VISITOR_TOKEN_STORAGE_KEY, res.visitor_token);
+        safeSessionSet(VISITOR_TOKEN_STORAGE_KEY, res.visitor_token);
       }
       applyGatePayload(res);
       setVisitorAuthenticated(true);
@@ -214,10 +284,10 @@ export default function App() {
   const navigateToSection = (nextStage: JourneyStage) => {
     if (nextStage === 'bro') {
       setVisitedBro(true);
-      sessionStorage.setItem(VISITED_BRO_KEY, 'true');
+      safeSessionSet(VISITED_BRO_KEY, 'true');
     } else if (nextStage === 'friend') {
       setVisitedFriend(true);
-      sessionStorage.setItem(VISITED_FRIEND_KEY, 'true');
+      safeSessionSet(VISITED_FRIEND_KEY, 'true');
     }
     setStage(nextStage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
