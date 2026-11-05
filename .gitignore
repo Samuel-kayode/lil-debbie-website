@@ -1,0 +1,41 @@
+# Dependencies & Build Outputs
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Personal Media Guard — NEVER upload personal photos, videos, or audio to GitHub.
+# All personal media must be uploaded via the app directly to Supabase Storage (lil-debbie-media).
+personal-media/
+uploads/
+media/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.avif
+*.heic
+*.mp4
+*.mov
+*.webm
+*.avi
+*.mkv
+*.mp3
+*.wav
+*.ogg
+*.m4a
+*.aac
+*.flac
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

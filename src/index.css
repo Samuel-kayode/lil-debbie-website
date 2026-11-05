@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Subtle decorative background pattern */
+.bg-sanctuary-grid {
+  background-image: radial-gradient(rgba(244, 63, 94, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
