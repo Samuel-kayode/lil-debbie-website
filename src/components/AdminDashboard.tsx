@@ -40,7 +40,7 @@ import {
 
 interface AdminDashboardProps {
   onBackToSite: () => void;
-  onDataUpdated: () => void;
+  onDataUpdated: (updatedContent?: BirthdayContentConfig) => void;
 }
 
 export function AdminDashboard({ onBackToSite, onDataUpdated }: AdminDashboardProps) {
@@ -55,8 +55,11 @@ export function AdminDashboard({ onBackToSite, onDataUpdated }: AdminDashboardPr
   const [loginError, setLoginError] = useState('');
 
   // Dashboard Tabs
-  const [activeTab, setActiveTab] = useState<'media' | 'content' | 'security'>('media');
+  const [activeTab, setActiveTab] = useState<'media' | 'content' | 'security'>('content');
   const [filterGroup, setFilterGroup] = useState<string>('All');
+  const [textSectionFilter, setTextSectionFilter] = useState<
+    'all' | 'gate' | 'homepage' | 'bro' | 'friend' | 'surprise' | 'settings'
+  >('all');
   const [statusMessage, setStatusMessage] = useState<{
     text: string;
     type: 'success' | 'error';
@@ -449,8 +452,8 @@ export function AdminDashboard({ onBackToSite, onDataUpdated }: AdminDashboardPr
         .eq('id', 'default');
 
       if (error) throw error;
-      onDataUpdated();
-      notify('Saved website letters, captions, and audio settings!');
+      onDataUpdated(contentConfig);
+      notify('Saved all website text, letters, captions, and audio settings!');
     } catch (err: any) {
       notify(err?.message || 'Failed to save content settings.', 'error');
     } finally {
@@ -698,7 +701,7 @@ export function AdminDashboard({ onBackToSite, onDataUpdated }: AdminDashboardPr
             }`}
           >
             <FileText className="w-4 h-4" />
-            <span>2. Letters, Captions & Music Settings</span>
+            <span>2. Edit All Website Text & Audio</span>
           </button>
 
           <button
@@ -1046,230 +1049,1698 @@ export function AdminDashboard({ onBackToSite, onDataUpdated }: AdminDashboardPr
             =================================================================== */}
         {activeTab === 'content' && (
           <form onSubmit={handleSaveContentConfig} className="space-y-6">
-            {/* Section Visibility & Audio Controls */}
-            <div className="scrapbook-card rounded-3xl p-6 bg-white space-y-4">
-              <h2 className="font-display text-xl text-[#2B1E1A]">
-                Section Visibility, Journey & Background Music Settings
-              </h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <label className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FFF3D1]/60 border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={contentConfig.bro_visible}
-                    onChange={(e) =>
-                      setContentConfig({ ...contentConfig, bro_visible: e.target.checked })
+            {/* Top Bar: Quick Section Filter + Save Button */}
+            <div className="scrapbook-card rounded-3xl p-5 bg-white flex flex-wrap items-center justify-between gap-3 sticky top-16 z-20">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: 'all', label: '✨ All Sections' },
+                  { id: 'gate', label: '🔒 1. Password Gate & Global' },
+                  { id: 'homepage', label: '🎈 2. Homepage' },
+                  { id: 'bro', label: '💛 3. Bro Section' },
+                  { id: 'friend', label: '😜 4. Friend Section' },
+                  { id: 'surprise', label: '💌 5. Final Surprise' },
+                  { id: 'settings', label: '🎵 6. Visibility & Audio' },
+                ].map((sec) => (
+                  <button
+                    key={sec.id}
+                    type="button"
+                    onClick={() =>
+                      setTextSectionFilter(
+                        sec.id as
+                          | 'all'
+                          | 'gate'
+                          | 'homepage'
+                          | 'bro'
+                          | 'friend'
+                          | 'surprise'
+                          | 'settings'
+                      )
                     }
-                    className="w-4 h-4 accent-[#F15B48]"
-                  />
-                  <span>Show "Bro Section"</span>
-                </label>
-
-                <label className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FFF3D1]/60 border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={contentConfig.friend_visible}
-                    onChange={(e) =>
-                      setContentConfig({
-                        ...contentConfig,
-                        friend_visible: e.target.checked,
-                      })
-                    }
-                    className="w-4 h-4 accent-[#F15B48]"
-                  />
-                  <span>Show "Friend Section"</span>
-                </label>
-
-                <label className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FFF3D1]/60 border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={contentConfig.require_both_sections_visited}
-                    onChange={(e) =>
-                      setContentConfig({
-                        ...contentConfig,
-                        require_both_sections_visited: e.target.checked,
-                      })
-                    }
-                    className="w-4 h-4 accent-[#F15B48]"
-                  />
-                  <span>Unlock Final Surprise Only After Visiting Both Bro & Friend</span>
-                </label>
-
-                <label className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FFF3D1]/60 border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={contentConfig.show_password_hint}
-                    onChange={(e) =>
-                      setContentConfig({
-                        ...contentConfig,
-                        show_password_hint: e.target.checked,
-                      })
-                    }
-                    className="w-4 h-4 accent-[#F15B48]"
-                  />
-                  <span>Show Subtle Hint on Birthday Password Gate</span>
-                </label>
-
-                <div className="sm:col-span-2 p-3 rounded-2xl bg-[#FFF3D1]/60 border-2 border-[#2B1E1A] flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-xs font-bold">
-                    Background Music Behaviour Across Sections:
-                  </span>
-                  <select
-                    value={contentConfig.music_behavior}
-                    onChange={(e) =>
-                      setContentConfig({
-                        ...contentConfig,
-                        music_behavior: e.target.value as 'continue' | 'restart',
-                      })
-                    }
-                    className="px-3 py-1.5 rounded-xl border-2 border-[#2B1E1A] bg-white text-xs font-bold"
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border-2 border-[#2B1E1A] cursor-pointer transition ${
+                      textSectionFilter === sec.id
+                        ? 'bg-[#FFC928] text-[#2B1E1A]'
+                        : 'bg-[#FFF3D1]/60 text-[#2B1E1A] hover:bg-[#FFF3D1]'
+                    }`}
                   >
-                    <option value="continue">
-                      Continue Playing Seamlessly Across Sections
-                    </option>
-                    <option value="restart">
-                      Restart Track When Switching Sections
-                    </option>
-                  </select>
-                </div>
+                    {sec.label}
+                  </button>
+                ))}
               </div>
+
+              <button
+                type="submit"
+                disabled={savingContent}
+                className="storybook-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#F15B48] text-white font-display text-sm sm:text-base cursor-pointer disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                <span>
+                  {savingContent ? 'Saving All Text...' : 'Save All Website Text'}
+                </span>
+              </button>
             </div>
 
-            {/* Bro Section Draft Letter Review */}
-            <div className="scrapbook-card rounded-3xl p-6 bg-white space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h2 className="font-display text-xl text-[#2B1E1A]">
-                    Bro Section — Draft Letter for Your Review
+            {/* 1. PASSWORD GATE & GLOBAL HEADER/FOOTER TEXT */}
+            {(textSectionFilter === 'all' || textSectionFilter === 'gate') && (
+              <div className="scrapbook-card rounded-3xl p-6 bg-white space-y-4">
+                <div className="border-b-2 border-dashed border-[#2B1E1A]/20 pb-3">
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#FFC928] border border-[#2B1E1A] text-[11px] font-extrabold">
+                    SCREEN 1 & GLOBAL BAR
+                  </span>
+                  <h2 className="font-display text-xl text-[#2B1E1A] mt-1">
+                    Password Gate Screen & Global Navigation Text
                   </h2>
-                  <p className="text-xs text-[#2B1E1A]/75">
-                    Drafted from your 8 heartfelt points. You can edit any word below and mark it as approved whenever you are happy with it.
-                  </p>
                 </div>
-                <label className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FFC928] border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={!contentConfig.bro_section.is_draft_for_review}
-                    onChange={(e) =>
-                      setContentConfig({
-                        ...contentConfig,
-                        bro_section: {
-                          ...contentConfig.bro_section,
-                          is_draft_for_review: !e.target.checked,
-                        },
-                      })
-                    }
-                    className="w-4 h-4 accent-[#F15B48]"
-                  />
-                  <span>Mark Bro Letter as Approved</span>
-                </label>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Password Gate Top Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.gate_section.badge}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          gate_section: {
+                            ...contentConfig.gate_section,
+                            badge: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Password Gate Main Title
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.gate_section.title}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          gate_section: {
+                            ...contentConfig.gate_section,
+                            title: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Password Gate Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.gate_section.subtitle}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          gate_section: {
+                            ...contentConfig.gate_section,
+                            subtitle: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Password Input Placeholder
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.gate_section.input_placeholder}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          gate_section: {
+                            ...contentConfig.gate_section,
+                            input_placeholder: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Unlock Button Text
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.gate_section.button_label}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          gate_section: {
+                            ...contentConfig.gate_section,
+                            button_label: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Optional Password Hint Text (Shown if Hint Toggle is Enabled)
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.password_hint_text}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          password_hint_text: e.target.value,
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Top Header Badge Text
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.global_text.header_badge}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          global_text: {
+                            ...contentConfig.global_text,
+                            header_badge: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      "Back to Homepage" Button Label
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.global_text.back_to_home_label}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          global_text: {
+                            ...contentConfig.global_text,
+                            back_to_home_label: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Background Music Player Default Title
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.music_title}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          music_title: e.target.value,
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Website Footer Text
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.global_text.footer_text}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          global_text: {
+                            ...contentConfig.global_text,
+                            footer_text: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+                </div>
               </div>
+            )}
 
-              <textarea
-                rows={11}
-                value={contentConfig.bro_section.letter_draft}
-                onChange={(e) =>
-                  setContentConfig({
-                    ...contentConfig,
-                    bro_section: {
-                      ...contentConfig.bro_section,
-                      letter_draft: e.target.value,
-                    },
-                  })
-                }
-                className="w-full p-4 rounded-2xl border-2 border-[#2B1E1A] bg-[#FFF3D1]/30 text-sm leading-relaxed"
-              />
-            </div>
-
-            {/* Friend Section Editable Openings & Captions */}
-            <div className="scrapbook-card rounded-3xl p-6 bg-white space-y-4">
-              <h2 className="font-display text-xl text-[#2B1E1A]">
-                Friend Section — Playful Opening & Red-Gown Video Caption
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
-                    Friend Section Opening Line
-                  </label>
-                  <input
-                    type="text"
-                    value={contentConfig.friend_section.opening_line}
-                    onChange={(e) =>
-                      setContentConfig({
-                        ...contentConfig,
-                        friend_section: {
-                          ...contentConfig.friend_section,
-                          opening_line: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
-                    Red-Gown Video Suggested Caption
-                  </label>
-                  <input
-                    type="text"
-                    value={contentConfig.friend_section.red_gown_caption}
-                    onChange={(e) =>
-                      setContentConfig({
-                        ...contentConfig,
-                        friend_section: {
-                          ...contentConfig.friend_section,
-                          red_gown_caption: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Final Surprise Approved Letter Verification */}
-            <div className="scrapbook-card rounded-3xl p-6 bg-white space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h2 className="font-display text-xl text-[#2B1E1A]">
-                    Final Surprise — Approved Exact Letter (Written Only)
+            {/* 2. HOMEPAGE TEXT */}
+            {(textSectionFilter === 'all' || textSectionFilter === 'homepage') && (
+              <div className="scrapbook-card rounded-3xl p-6 bg-white space-y-4">
+                <div className="border-b-2 border-dashed border-[#2B1E1A]/20 pb-3">
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#FF8A32] text-white border border-[#2B1E1A] text-[11px] font-extrabold">
+                    SCREEN 2 • HOMEPAGE
+                  </span>
+                  <h2 className="font-display text-xl text-[#2B1E1A] mt-1">
+                    Homepage Headline, Paragraphs, Buttons & Surprise Unlock Box
                   </h2>
-                  <p className="text-xs text-[#2B1E1A]/75">
-                    Pre-loaded with your exact, unchanged approved letter.
-                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setContentConfig({
-                      ...contentConfig,
-                      final_surprise: {
-                        ...contentConfig.final_surprise,
-                        letter_exact: EXACT_APPROVED_FINAL_SURPRISE_LETTER,
-                      },
-                    })
-                  }
-                  className="px-3 py-1.5 rounded-xl bg-[#FFF3D1] border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer"
-                >
-                  Restore Exact Approved Wording
-                </button>
-              </div>
 
-              <textarea
-                rows={10}
-                value={contentConfig.final_surprise.letter_exact}
-                onChange={(e) =>
-                  setContentConfig({
-                    ...contentConfig,
-                    final_surprise: {
-                      ...contentConfig.final_surprise,
-                      letter_exact: e.target.value,
-                    },
-                  })
-                }
-                className="w-full p-4 rounded-2xl border-2 border-[#2B1E1A] bg-[#FFF3D1]/30 text-sm leading-relaxed"
-              />
-            </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Homepage Top Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.homepage.hero_badge}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            hero_badge: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Main Birthday Headline
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.homepage.headline}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            headline: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm font-bold"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Introductory Paragraph 1
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={contentConfig.homepage.paragraph_1}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            paragraph_1: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Introductory Paragraph 2
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={contentConfig.homepage.paragraph_2}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            paragraph_2: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Introductory Paragraph 3 (Highlighted Line)
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.homepage.paragraph_3}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            paragraph_3: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Bro Section Button Text
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.homepage.bro_button_label}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            bro_button_label: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Friend Section Button Text
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.homepage.friend_button_label}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            friend_button_label: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Secret Star Sticker Button Label
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.homepage.secret_star_label}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            secret_star_label: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Secret Star Hidden Message
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.homepage.secret_star_message}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            secret_star_message: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Final Surprise Unlocked Title
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.homepage.surprise_unlocked_title}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            surprise_unlocked_title: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Final Surprise Unlocked Button Label
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.homepage.surprise_unlocked_button}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            surprise_unlocked_button: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Final Surprise Unlocked Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.homepage.surprise_unlocked_subtitle}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            surprise_unlocked_subtitle: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Final Surprise Locked Prompt Text
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.homepage.surprise_locked_message}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          homepage: {
+                            ...contentConfig.homepage,
+                            surprise_locked_message: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 3. BRO SECTION TEXT & LETTER */}
+            {(textSectionFilter === 'all' || textSectionFilter === 'bro') && (
+              <div className="scrapbook-card rounded-3xl p-6 bg-white space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-dashed border-[#2B1E1A]/20 pb-3">
+                  <div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#FF8A32] text-white border border-[#2B1E1A] text-[11px] font-extrabold">
+                      SCREEN 3 • WISHES FROM YOUR BRO
+                    </span>
+                    <h2 className="font-display text-xl text-[#2B1E1A] mt-1">
+                      Bro Section Headings, Letter, Gallery Captions & Voice Note Labels
+                    </h2>
+                  </div>
+                  <label className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FFC928] border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!contentConfig.bro_section.is_draft_for_review}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            is_draft_for_review: !e.target.checked,
+                          },
+                        })
+                      }
+                      className="w-4 h-4 accent-[#F15B48]"
+                    />
+                    <span>Mark Bro Letter as Approved</span>
+                  </label>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Bro Banner Top Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.header_badge}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            header_badge: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Bro Section Main Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.opening_title}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            opening_title: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm font-bold"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Bro Section Opening Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.opening_subtitle}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            opening_subtitle: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Letter Card Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.letter_card_heading}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            letter_card_heading: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Letter Card Subheading
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.letter_card_subheading}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            letter_card_subheading: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Bro Section Full Letter (All Paragraphs Editable)
+                    </label>
+                    <textarea
+                      rows={11}
+                      value={contentConfig.bro_section.letter_draft}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            letter_draft: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-4 rounded-2xl border-2 border-[#2B1E1A] bg-[#FFF3D1]/30 text-sm leading-relaxed"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Letter Sign-off Signature
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.letter_signoff}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            letter_signoff: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Scrapbook Gallery Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.gallery_badge}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            gallery_badge: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Scrapbook Gallery Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.gallery_heading}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            gallery_heading: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Scrapbook Gallery Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.gallery_subtitle}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            gallery_subtitle: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Default Photo Frame #1 Caption (Sweet)
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.placeholder_caption_1}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            placeholder_caption_1: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Default Photo Frame #2 Caption (Funny)
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.placeholder_caption_2}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            placeholder_caption_2: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Default Photo Frame #3 Caption (Playful)
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.placeholder_caption_3}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            placeholder_caption_3: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Bro Voice Note Player Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.voice_note_heading}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            voice_note_heading: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Bro Voice Note Player Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.voice_note_caption}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            voice_note_caption: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Bro Secret Sticker Label
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.secret_note_label}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            secret_note_label: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Bro Secret Sticker Revealed Message
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.bro_section.secret_note_message}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            secret_note_message: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Bro Section Closing Banner Message
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={contentConfig.bro_section.closing_message}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_section: {
+                            ...contentConfig.bro_section,
+                            closing_message: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 4. FRIEND SECTION ALL TEXT, JOKES, COMPLIMENTS & CARING NOTE */}
+            {(textSectionFilter === 'all' || textSectionFilter === 'friend') && (
+              <div className="scrapbook-card rounded-3xl p-6 bg-white space-y-4">
+                <div className="border-b-2 border-dashed border-[#2B1E1A]/20 pb-3">
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#F15B48] text-white border border-[#2B1E1A] text-[11px] font-extrabold">
+                    SCREEN 4 • WISHES FROM YOUR FRIEND
+                  </span>
+                  <h2 className="font-display text-xl text-[#2B1E1A] mt-1">
+                    Friend Section — All Jokes, Compliments, Voice Notes, Red-Gown & Caring Message
+                  </h2>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Friend Banner Top Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.header_badge}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            header_badge: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Friend Section Opening Headline
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.opening_line}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            opening_line: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm font-bold"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Friend Section Opening Subtext
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.opening_subtext}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            opening_subtext: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Scattered Compliment #1 (Fair Skin, Eyes & Small Pointy Nose)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={contentConfig.friend_section.compliment_1_text}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            compliment_1_text: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Red-Gown Video Card Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.red_gown_badge}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            red_gown_badge: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Red-Gown Video Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.red_gown_heading}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            red_gown_heading: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Red-Gown Video Caption
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.red_gown_caption}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            red_gown_caption: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Tiny Hands Joke Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.tiny_hands_badge}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            tiny_hands_badge: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Tiny Hands Joke Title ("Which hand?")
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.tiny_hands_title}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            tiny_hands_title: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Tiny Hands Joke Body
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={contentConfig.friend_section.tiny_hands_body}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            tiny_hands_body: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Tiny Hands Secret Sticker Button Label
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.tiny_hands_secret_label}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            tiny_hands_secret_label: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Tiny Hands Secret Sticker Message
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.tiny_hands_secret_message}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            tiny_hands_secret_message: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Smile, Mouth & Laugh Compliment Title
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.smile_laugh_title}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            smile_laugh_title: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Smile, Mouth & Laugh Sign-off Note
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.smile_laugh_footer}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            smile_laugh_footer: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Smile, Mouth & Contagious Laugh Compliment Body
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={contentConfig.friend_section.smile_laugh_body}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            smile_laugh_body: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      6:00 AM "Hi Baby" Morning Voice Notes Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.morning_voice_heading}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            morning_voice_heading: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      6:00 AM "Hi Baby" Morning Voice Notes Description
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={contentConfig.friend_section.morning_voice_body}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            morning_voice_body: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Spontaneous Daily Updates Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.spontaneous_updates_heading}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            spontaneous_updates_heading: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Spontaneous Daily Updates Body
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={contentConfig.friend_section.spontaneous_updates_body}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            spontaneous_updates_body: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Backside / Figure Joke Title
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.backside_joke_title}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            backside_joke_title: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Official Funny Videos Request Title
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.official_request_title}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            official_request_title: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Backside / Figure Joke Body
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={contentConfig.friend_section.backside_joke_body}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            backside_joke_body: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Official Funny Videos Request Body
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={contentConfig.friend_section.official_request_body}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            official_request_body: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Caring Message ("Call Me on Difficult Days") Title
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.difficult_day_title}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            difficult_day_title: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Caring Message ("Call Me on Difficult Days") Body
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={contentConfig.friend_section.difficult_day_body}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            difficult_day_body: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Private Gallery Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.private_gallery_title}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            private_gallery_title: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Private Gallery Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.friend_section.private_gallery_subtitle}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            private_gallery_subtitle: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Friend Section Closing Banner Message
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={contentConfig.friend_section.closing_message}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_section: {
+                            ...contentConfig.friend_section,
+                            closing_message: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 5. FINAL SURPRISE SECTION */}
+            {(textSectionFilter === 'all' || textSectionFilter === 'surprise') && (
+              <div className="scrapbook-card rounded-3xl p-6 bg-white space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-dashed border-[#2B1E1A]/20 pb-3">
+                  <div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#F15B48] text-white border border-[#2B1E1A] text-[11px] font-extrabold">
+                      SCREEN 5 • FINAL SURPRISE
+                    </span>
+                    <h2 className="font-display text-xl text-[#2B1E1A] mt-1">
+                      Final Surprise — Badge, Heading & Written Letter
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setContentConfig({
+                        ...contentConfig,
+                        final_surprise: {
+                          ...contentConfig.final_surprise,
+                          letter_exact: EXACT_APPROVED_FINAL_SURPRISE_LETTER,
+                        },
+                      })
+                    }
+                    className="px-3 py-1.5 rounded-xl bg-[#FFF3D1] border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer hover:bg-[#FFC928]"
+                  >
+                    Restore Exact Approved Wording
+                  </button>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Final Surprise Top Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.final_surprise.header_badge}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          final_surprise: {
+                            ...contentConfig.final_surprise,
+                            header_badge: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Final Surprise Main Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={contentConfig.final_surprise.heading}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          final_surprise: {
+                            ...contentConfig.final_surprise,
+                            heading: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-[#2B1E1A] text-sm font-bold"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#2B1E1A] mb-1">
+                      Final Surprise Written Letter
+                    </label>
+                    <textarea
+                      rows={11}
+                      value={contentConfig.final_surprise.letter_exact}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          final_surprise: {
+                            ...contentConfig.final_surprise,
+                            letter_exact: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full p-4 rounded-2xl border-2 border-[#2B1E1A] bg-[#FFF3D1]/30 text-sm leading-relaxed"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 6. SECTION VISIBILITY & AUDIO SETTINGS */}
+            {(textSectionFilter === 'all' || textSectionFilter === 'settings') && (
+              <div className="scrapbook-card rounded-3xl p-6 bg-white space-y-4">
+                <h2 className="font-display text-xl text-[#2B1E1A]">
+                  Section Visibility, Journey & Background Music Settings
+                </h2>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <label className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FFF3D1]/60 border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={contentConfig.bro_visible}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          bro_visible: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 accent-[#F15B48]"
+                    />
+                    <span>Show "Bro Section"</span>
+                  </label>
+
+                  <label className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FFF3D1]/60 border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={contentConfig.friend_visible}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          friend_visible: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 accent-[#F15B48]"
+                    />
+                    <span>Show "Friend Section"</span>
+                  </label>
+
+                  <label className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FFF3D1]/60 border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={contentConfig.require_both_sections_visited}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          require_both_sections_visited: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 accent-[#F15B48]"
+                    />
+                    <span>Unlock Final Surprise Only After Visiting Both Bro & Friend</span>
+                  </label>
+
+                  <label className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#FFF3D1]/60 border-2 border-[#2B1E1A] text-xs font-bold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={contentConfig.show_password_hint}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          show_password_hint: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 accent-[#F15B48]"
+                    />
+                    <span>Show Subtle Hint on Birthday Password Gate</span>
+                  </label>
+
+                  <div className="sm:col-span-2 p-3 rounded-2xl bg-[#FFF3D1]/60 border-2 border-[#2B1E1A] flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-bold">
+                      Background Music Behaviour Across Sections:
+                    </span>
+                    <select
+                      value={contentConfig.music_behavior}
+                      onChange={(e) =>
+                        setContentConfig({
+                          ...contentConfig,
+                          music_behavior: e.target.value as 'continue' | 'restart',
+                        })
+                      }
+                      className="px-3 py-1.5 rounded-xl border-2 border-[#2B1E1A] bg-white text-xs font-bold"
+                    >
+                      <option value="continue">
+                        Continue Playing Seamlessly Across Sections
+                      </option>
+                      <option value="restart">
+                        Restart Track When Switching Sections
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-end">
               <button
@@ -1279,7 +2750,9 @@ export function AdminDashboard({ onBackToSite, onDataUpdated }: AdminDashboardPr
               >
                 <Save className="w-5 h-5" />
                 <span>
-                  {savingContent ? 'Saving Changes...' : 'Save All Text & Audio Settings'}
+                  {savingContent
+                    ? 'Saving All Website Text...'
+                    : 'Save All Website Text & Audio Settings'}
                 </span>
               </button>
             </div>

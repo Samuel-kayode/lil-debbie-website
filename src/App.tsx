@@ -9,9 +9,7 @@ import {
   Camera,
   Film,
   Smile,
-  MessageCircleHeart,
   Gift,
-  CheckCircle2,
   AlertCircle,
   X,
   ZoomIn,
@@ -46,6 +44,7 @@ type JourneyStage = 'gate' | 'home' | 'bro' | 'friend' | 'surprise' | 'admin';
 const VISITOR_TOKEN_STORAGE_KEY = 'lil_debbie_visitor_session_token';
 const VISITED_BRO_KEY = 'lil_debbie_visited_bro';
 const VISITED_FRIEND_KEY = 'lil_debbie_visited_friend';
+const LOCAL_CONTENT_CACHE_KEY = 'lil_debbie_content_cache';
 
 function safeSessionGet(key: string): string | null {
   try {
@@ -71,50 +70,6 @@ function safeSessionRemove(key: string): void {
   }
 }
 
-const BRO_PLACEHOLDER_SLOTS = [
-  {
-    id: 'bro-ph-1',
-    vibe: 'Sweet ❤️',
-    rotation: '-rotate-2',
-    tapeColor: 'bg-[#FFC928]',
-    caption:
-      'That effortless smile that warms up the whole room before you even say a word. ❤️',
-  },
-  {
-    id: 'bro-ph-2',
-    vibe: 'Funny 😂',
-    rotation: 'rotate-2',
-    tapeColor: 'bg-[#F15B48] text-white',
-    caption:
-      'The exact face of someone pretending she is completely innocent after causing chaos. 😂',
-  },
-  {
-    id: 'bro-ph-3',
-    vibe: 'Playful ✨',
-    rotation: '-rotate-1',
-    tapeColor: 'bg-[#FF8A32] text-white',
-    caption:
-      'Growing stronger, wiser, and more radiant every single year—proud of you always, sis! ✨',
-  },
-];
-
-const FRIEND_EVERYDAY_PLACEHOLDERS = [
-  {
-    id: 'fr-ev-1',
-    badge: 'New Hairstyle Alert 💇🏽‍♀️',
-    rotation: '-rotate-1',
-    caption:
-      'Reserved for your unprompted hairstyle reveal updates that always brighten my phone screen.',
-  },
-  {
-    id: 'fr-ev-2',
-    badge: 'After-Work Tired Face 😮‍💨❤️',
-    rotation: 'rotate-2',
-    caption:
-      'Reserved for those cute "I am exhausted" everyday updates you send without me even asking.',
-  },
-];
-
 export default function App() {
   const [stage, setStage] = useState<JourneyStage>(() => {
     if (window.location.hash === '#admin') return 'admin';
@@ -131,9 +86,17 @@ export default function App() {
   const [rateLimitedInfo, setRateLimitedInfo] = useState<string | null>(null);
 
   // Approved Birthday Content & Private Signed Media
-  const [content, setContent] = useState<BirthdayContentConfig>(
-    DEFAULT_BIRTHDAY_CONTENT
-  );
+  const [content, setContent] = useState<BirthdayContentConfig>(() => {
+    const cached = safeSessionGet(LOCAL_CONTENT_CACHE_KEY);
+    if (cached) {
+      try {
+        return mergeBirthdayContent(JSON.parse(cached));
+      } catch {
+        return DEFAULT_BIRTHDAY_CONTENT;
+      }
+    }
+    return DEFAULT_BIRTHDAY_CONTENT;
+  });
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
 
   // Section Exploration Tracking for Final Surprise Unlock
@@ -152,7 +115,9 @@ export default function App() {
     media_items?: MediaItem[];
   }) => {
     if (payload.site_settings?.birthday_content) {
-      setContent(mergeBirthdayContent(payload.site_settings.birthday_content));
+      const merged = mergeBirthdayContent(payload.site_settings.birthday_content);
+      setContent(merged);
+      safeSessionSet(LOCAL_CONTENT_CACHE_KEY, JSON.stringify(merged));
     }
     if (Array.isArray(payload.media_items)) {
       setMediaItems(payload.media_items);
@@ -313,6 +278,45 @@ export default function App() {
   const isSurpriseUnlocked =
     !content.require_both_sections_visited || (visitedBro && visitedFriend);
 
+  const broPlaceholders = [
+    {
+      id: 'bro-ph-1',
+      vibe: 'Sweet ❤️',
+      rotation: '-rotate-2',
+      tapeColor: 'bg-[#FFC928]',
+      caption: content.bro_section.placeholder_caption_1,
+    },
+    {
+      id: 'bro-ph-2',
+      vibe: 'Funny 😂',
+      rotation: 'rotate-2',
+      tapeColor: 'bg-[#F15B48] text-white',
+      caption: content.bro_section.placeholder_caption_2,
+    },
+    {
+      id: 'bro-ph-3',
+      vibe: 'Playful ✨',
+      rotation: '-rotate-1',
+      tapeColor: 'bg-[#FF8A32] text-white',
+      caption: content.bro_section.placeholder_caption_3,
+    },
+  ];
+
+  const friendEverydayPlaceholders = [
+    {
+      id: 'fr-ev-1',
+      badge: content.friend_section.everyday_placeholder_1_badge,
+      rotation: '-rotate-1',
+      caption: content.friend_section.everyday_placeholder_1_caption,
+    },
+    {
+      id: 'fr-ev-2',
+      badge: content.friend_section.everyday_placeholder_2_badge,
+      rotation: 'rotate-2',
+      caption: content.friend_section.everyday_placeholder_2_caption,
+    },
+  ];
+
   // ===========================================================================
   // OWNER ADMIN DASHBOARD VIEW
   // ===========================================================================
@@ -323,7 +327,12 @@ export default function App() {
           window.location.hash = '';
           setStage(visitorAuthenticated ? 'home' : 'gate');
         }}
-        onDataUpdated={() => {
+        onDataUpdated={(updatedContent?: BirthdayContentConfig) => {
+          if (updatedContent) {
+            const merged = mergeBirthdayContent(updatedContent);
+            setContent(merged);
+            safeSessionSet(LOCAL_CONTENT_CACHE_KEY, JSON.stringify(merged));
+          }
           if (visitorAuthenticated) {
             restoreOrRefreshVisitorSession();
           }
@@ -351,15 +360,15 @@ export default function App() {
             <div className="space-y-2">
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#F15B48] text-white border-2 border-[#2B1E1A] text-xs font-extrabold tracking-wide shadow-[2px_2px_0px_#2B1E1A]">
                 <Sparkles className="w-3.5 h-3.5" />
-                PRIVATE BIRTHDAY EXPERIENCE
+                {content.gate_section.badge}
               </span>
 
               <h1 className="font-display text-3xl sm:text-4xl text-[#2B1E1A] leading-tight pt-1">
-                Something Special For Lil Debbie ❤️
+                {content.gate_section.title}
               </h1>
 
               <p className="text-sm text-[#2B1E1A]/85 leading-relaxed">
-                Enter your special birthday passcode below to unlock your birthday surprise.
+                {content.gate_section.subtitle}
               </p>
 
               {content.show_password_hint && content.password_hint_text && (
@@ -394,7 +403,7 @@ export default function App() {
                     required
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
-                    placeholder="Enter birthday passcode..."
+                    placeholder={content.gate_section.input_placeholder}
                     aria-label="Birthday Passcode"
                     className="w-full px-4 py-3.5 rounded-2xl bg-white border-2 border-[#2B1E1A] text-center font-display text-xl tracking-widest text-[#2B1E1A] placeholder:font-sans placeholder:text-sm placeholder:tracking-normal focus:outline-none focus:ring-4 focus:ring-[#FF8A32]/40"
                   />
@@ -409,7 +418,7 @@ export default function App() {
                   <span>
                     {verifyingPassword
                       ? 'Unlocking Your Surprise...'
-                      : 'Open My Birthday Surprise ❤️'}
+                      : content.gate_section.button_label}
                   </span>
                 </button>
               </form>
@@ -452,12 +461,12 @@ export default function App() {
                 className="storybook-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#FFC928] text-xs sm:text-sm font-extrabold text-[#2B1E1A] cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Back to Homepage</span>
+                <span>{content.global_text.back_to_home_label}</span>
               </button>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F15B48] text-white border-2 border-[#2B1E1A] text-xs font-extrabold shadow-[2px_2px_0px_#2B1E1A]">
                 <Heart className="w-3.5 h-3.5 fill-current" />
-                <span>Lil Debbie’s Day</span>
+                <span>{content.global_text.header_badge}</span>
               </span>
             )}
 
@@ -473,7 +482,7 @@ export default function App() {
                       : 'bg-white text-[#2B1E1A] hover:bg-[#FFC928]'
                   }`}
                 >
-                  Bro Wishes {visitedBro ? '✓' : ''}
+                  {content.homepage.bro_button_label} {visitedBro ? '✓' : ''}
                 </button>
               )}
               {content.friend_visible && (
@@ -486,7 +495,7 @@ export default function App() {
                       : 'bg-white text-[#2B1E1A] hover:bg-[#FFC928]'
                   }`}
                 >
-                  Friend Wishes {visitedFriend ? '✓' : ''}
+                  {content.homepage.friend_button_label} {visitedFriend ? '✓' : ''}
                 </button>
               )}
               {content.final_surprise_visible && isSurpriseUnlocked && (
@@ -540,7 +549,7 @@ export default function App() {
               <div className="flex flex-col items-center text-center">
                 <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#FF8A32] text-white border-2 border-[#2B1E1A] text-xs font-extrabold shadow-[2px_2px_0px_#2B1E1A] mb-3">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>CELEBRATING YOU TODAY & ALWAYS</span>
+                  <span>{content.homepage.hero_badge}</span>
                 </div>
 
                 <IllustratedBirthdayCake className="w-56 h-56 sm:w-72 sm:h-72 my-2" />
@@ -587,8 +596,8 @@ export default function App() {
                 {/* Playful Hidden Birthday Mini-Note */}
                 <div className="mt-6">
                   <HiddenSurpriseSticker
-                    badgeLabel="Tap This Birthday Star for a Little Secret ⭐"
-                    secretMessage="Psst... make sure you visit BOTH 'Wishes from your Bro' and 'Wishes from your Friend'—something very special unlocks at the end once you've seen both! ❤️"
+                    badgeLabel={content.homepage.secret_star_label}
+                    secretMessage={content.homepage.secret_star_message}
                     variant="sunshine"
                   />
                 </div>
@@ -600,33 +609,32 @@ export default function App() {
                       <div className="space-y-3">
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFC928] border border-[#2B1E1A] text-xs font-extrabold">
                           <Unlock className="w-3.5 h-3.5 text-[#F15B48]" />
-                          <span>FINAL SURPRISE UNLOCKED!</span>
+                          <span>{content.homepage.surprise_unlocked_badge}</span>
                         </div>
                         <h3 className="font-display text-xl sm:text-2xl text-[#2B1E1A]">
-                          One Last Letter Is Waiting For You ❤️
+                          {content.homepage.surprise_unlocked_title}
                         </h3>
                         <p className="text-xs sm:text-sm text-[#2B1E1A]/80">
-                          You’ve explored both chapters. Whenever you’re ready, open your final birthday surprise.
+                          {content.homepage.surprise_unlocked_subtitle}
                         </p>
                         <button
                           type="button"
                           onClick={() => navigateToSection('surprise')}
                           className="storybook-btn w-full py-3.5 px-6 rounded-2xl bg-[#F15B48] text-white font-display text-lg cursor-pointer"
                         >
-                          Read Your Final Surprise Letter ❤️
+                          {content.homepage.surprise_unlocked_button}
                         </button>
                       </div>
                     ) : (
                       <div className="space-y-2">
                         <div className="flex items-center justify-center gap-2 text-xs font-extrabold text-[#2B1E1A]/80">
                           <Lock className="w-4 h-4 text-[#F15B48]" />
-                          <span>FINAL SURPRISE LOCKED</span>
+                          <span>{content.homepage.surprise_locked_badge}</span>
                         </div>
                         <p className="text-xs sm:text-sm text-[#2B1E1A]/75">
-                          Explore both <strong>Wishes from your Bro</strong>{' '}
-                          {visitedBro ? '✅' : '⬜'} and{' '}
-                          <strong>Wishes from your Friend</strong>{' '}
-                          {visitedFriend ? '✅' : '⬜'} first to unlock your Final Surprise letter!
+                          {content.homepage.surprise_locked_message}{' '}
+                          (Bro: {visitedBro ? '✅' : '⬜'} • Friend:{' '}
+                          {visitedFriend ? '✅' : '⬜'})
                         </p>
                       </div>
                     )}
@@ -647,7 +655,7 @@ export default function App() {
             <div className="max-w-3xl mx-auto space-y-3 relative z-10">
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#FFC928] text-[#2B1E1A] border-2 border-[#2B1E1A] text-xs font-extrabold shadow-[2px_2px_0px_#2B1E1A]">
                 <Heart className="w-3.5 h-3.5 fill-[#F15B48] text-[#F15B48]" />
-                <span>CHAPTER ONE • WISHES FROM YOUR BRO</span>
+                <span>{content.bro_section.header_badge}</span>
               </span>
               <h1 className="font-display text-3xl sm:text-5xl text-white drop-shadow-[2px_2px_0px_#2B1E1A]">
                 {content.bro_section.opening_title}
@@ -670,10 +678,10 @@ export default function App() {
                   </div>
                   <div>
                     <h2 className="font-display text-xl sm:text-2xl text-[#2B1E1A]">
-                      A Letter From Your Big Bro
+                      {content.bro_section.letter_card_heading}
                     </h2>
                     <span className="text-xs text-[#2B1E1A]/70 font-medium">
-                      For My Sister, Lil Debbie ❤️
+                      {content.bro_section.letter_card_subheading}
                     </span>
                   </div>
                 </div>
@@ -685,7 +693,7 @@ export default function App() {
 
               <div className="mt-8 pt-6 border-t-2 border-dashed border-[#2B1E1A]/20 flex items-center justify-between">
                 <span className="font-handwriting text-2xl sm:text-3xl font-bold text-[#F15B48]">
-                  Always in your corner, Your Bro ❤️
+                  {content.bro_section.letter_signoff}
                 </span>
                 <Star className="w-6 h-6 fill-[#FFC928] text-[#2B1E1A]" />
               </div>
@@ -696,13 +704,13 @@ export default function App() {
               <div className="text-center space-y-2">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFC928] border-2 border-[#2B1E1A] text-xs font-extrabold">
                   <Camera className="w-3.5 h-3.5" />
-                  <span>SCRAPBOOK MEMORIES</span>
+                  <span>{content.bro_section.gallery_badge}</span>
                 </span>
                 <h2 className="font-display text-2xl sm:text-4xl text-[#2B1E1A]">
-                  Snapshots of My Favourite Sister 📸
+                  {content.bro_section.gallery_heading}
                 </h2>
                 <p className="text-xs sm:text-sm text-[#2B1E1A]/80 max-w-lg mx-auto">
-                  Tap any photograph to open it full-screen.
+                  {content.bro_section.gallery_subtitle}
                 </p>
               </div>
 
@@ -767,7 +775,7 @@ export default function App() {
                 </div>
               ) : (
                 <div className="grid sm:grid-cols-3 gap-6 pt-2">
-                  {BRO_PLACEHOLDER_SLOTS.map((slot) => (
+                  {broPlaceholders.map((slot) => (
                     <div
                       key={slot.id}
                       className={`scrapbook-card rounded-3xl p-4 bg-white ${slot.rotation}`}
@@ -811,8 +819,8 @@ export default function App() {
 
             {/* Hidden Interactive Note inside Bro Section */}
             <HiddenSurpriseSticker
-              badgeLabel="Tap for a Extra Big-Bro Reminder 💌"
-              secretMessage="No matter how busy life gets or where we both are, you will always have a brother who is proud of your heart and ready to listen whenever you call. ❤️"
+              badgeLabel={content.bro_section.secret_note_label}
+              secretMessage={content.bro_section.secret_note_message}
               variant="orange"
             />
 
@@ -829,7 +837,7 @@ export default function App() {
                   className="storybook-btn px-5 py-3 rounded-2xl bg-white text-[#2B1E1A] font-display text-base flex items-center gap-2 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  <span>Back to Homepage</span>
+                  <span>{content.global_text.back_to_home_label}</span>
                 </button>
 
                 {content.friend_visible && (
@@ -839,7 +847,7 @@ export default function App() {
                     className="storybook-btn px-5 py-3 rounded-2xl bg-[#F15B48] text-white font-display text-base flex items-center gap-2 cursor-pointer"
                   >
                     <Smile className="w-4 h-4" />
-                    <span>Next: Wishes from your Friend →</span>
+                    <span>Next: {content.homepage.friend_button_label} →</span>
                   </button>
                 )}
 
@@ -869,7 +877,7 @@ export default function App() {
             <div className="max-w-3xl mx-auto space-y-3">
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#FFC928] text-[#2B1E1A] border-2 border-[#2B1E1A] text-xs font-extrabold shadow-[2px_2px_0px_#2B1E1A]">
                 <Smile className="w-3.5 h-3.5" />
-                <span>CHAPTER TWO • WISHES FROM YOUR FRIEND</span>
+                <span>{content.friend_section.header_badge}</span>
               </span>
               <h1 className="font-display text-3xl sm:text-5xl text-white drop-shadow-[2px_2px_0px_#2B1E1A]">
                 {content.friend_section.opening_line}
@@ -887,7 +895,7 @@ export default function App() {
                 <Sparkles className="w-6 h-6 text-[#F15B48]" />
               </div>
               <p className="text-sm sm:text-base font-bold text-[#2B1E1A] leading-relaxed">
-                Before I even start roasting you today, let’s give credit where it’s due: between that glowing fair skin, those captivating eyes of yours, and that cute small pointy nose I love teasing you about, you really do know how to look effortlessly stunning. 😍✨
+                {content.friend_section.compliment_1_text}
               </p>
             </div>
 
@@ -896,7 +904,7 @@ export default function App() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <span className="px-3 py-1 rounded-full bg-[#F15B48] text-white border border-[#2B1E1A] text-xs font-extrabold">
-                    HALL OF FAME MOMENT 💃🏽
+                    {content.friend_section.red_gown_badge}
                   </span>
                   <h2 className="font-display text-2xl sm:text-3xl text-[#2B1E1A] mt-2">
                     {content.friend_section.red_gown_heading}
@@ -919,10 +927,10 @@ export default function App() {
                     <Film className="w-7 h-7" />
                   </div>
                   <h3 className="font-display text-xl text-[#2B1E1A]">
-                    Red-Gown Dancing Video Slot Ready
+                    {content.friend_section.red_gown_placeholder_title}
                   </h3>
                   <p className="text-xs sm:text-sm text-[#2B1E1A]/80 max-w-md mx-auto">
-                    Reserved exclusively for the actual video of you in your red gown singing and dancing while a completely different song played in the background!
+                    {content.friend_section.red_gown_placeholder_body}
                   </p>
                 </div>
               )}
@@ -938,7 +946,7 @@ export default function App() {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="scrapbook-card rounded-3xl p-6 bg-white rotate-1 space-y-3">
                 <span className="inline-block px-3 py-1 rounded-full bg-[#FF8A32] text-white border border-[#2B1E1A] text-xs font-extrabold">
-                  SERIOUS QUESTION 🥊😂
+                  {content.friend_section.tiny_hands_badge}
                 </span>
                 <h3 className="font-display text-2xl text-[#2B1E1A]">
                   {content.friend_section.tiny_hands_title}
@@ -947,8 +955,8 @@ export default function App() {
                   {content.friend_section.tiny_hands_body}
                 </p>
                 <HiddenSurpriseSticker
-                  badgeLabel='Tap to Hear My Verdict on Your "Punches" 😂'
-                  secretMessage='"Which hand?" — Still undefeated! Those tiny hands were built for holding cake, not fighting anybody. 😂❤️'
+                  badgeLabel={content.friend_section.tiny_hands_secret_label}
+                  secretMessage={content.friend_section.tiny_hands_secret_message}
                   variant="coral"
                 />
               </div>
@@ -956,17 +964,17 @@ export default function App() {
               <div className="scrapbook-card rounded-3xl p-6 bg-[#FFF3D1] -rotate-1 space-y-3 flex flex-col justify-between">
                 <div className="space-y-3">
                   <span className="inline-block px-3 py-1 rounded-full bg-[#FFC928] text-[#2B1E1A] border border-[#2B1E1A] text-xs font-extrabold">
-                    MY FAVOURITE SOUND 😍
+                    {content.friend_section.smile_laugh_badge}
                   </span>
                   <h3 className="font-display text-2xl text-[#2B1E1A]">
-                    That Smile, That Mouth & That Contagious Laugh
+                    {content.friend_section.smile_laugh_title}
                   </h3>
                   <p className="text-sm sm:text-base text-[#2B1E1A]/90 leading-relaxed font-medium">
-                    Even when you’re pretending to be tough, it takes about three seconds before that sweet mouth of yours curves into a smile. And your laugh? Honestly, your laugh is so contagious that the moment you start laughing, I can’t help laughing right along with you.
+                    {content.friend_section.smile_laugh_body}
                   </p>
                 </div>
                 <div className="pt-2 text-right font-handwriting text-2xl text-[#F15B48] font-bold">
-                  10/10 smile every single time ❤️
+                  {content.friend_section.smile_laugh_footer}
                 </div>
               </div>
             </div>
@@ -1018,7 +1026,7 @@ export default function App() {
             <section className="scrapbook-card rounded-[32px] p-6 sm:p-8 bg-white space-y-6">
               <div className="space-y-2">
                 <span className="px-3 py-1 rounded-full bg-[#FF8A32] text-white border border-[#2B1E1A] text-xs font-extrabold">
-                  BEST BEHAVIOUR AWARD 🏆
+                  {content.friend_section.spontaneous_updates_badge}
                 </span>
                 <h2 className="font-display text-2xl sm:text-3xl text-[#2B1E1A] pt-1">
                   {content.friend_section.spontaneous_updates_heading}
@@ -1067,7 +1075,7 @@ export default function App() {
                 </div>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-5">
-                  {FRIEND_EVERYDAY_PLACEHOLDERS.map((slot) => (
+                  {friendEverydayPlaceholders.map((slot) => (
                     <div
                       key={slot.id}
                       className={`scrapbook-card rounded-2xl p-5 bg-[#FFF3D1] ${slot.rotation} space-y-2`}
@@ -1088,7 +1096,7 @@ export default function App() {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="scrapbook-card rounded-3xl p-6 bg-[#FFC928] -rotate-1 space-y-3">
                 <span className="inline-block px-3 py-1 rounded-full bg-white text-[#2B1E1A] border border-[#2B1E1A] text-xs font-extrabold">
-                  FACT CHECK ✔️
+                  {content.friend_section.backside_joke_badge}
                 </span>
                 <h3 className="font-display text-2xl text-[#2B1E1A]">
                   {content.friend_section.backside_joke_title}
@@ -1100,7 +1108,7 @@ export default function App() {
 
               <div className="scrapbook-card rounded-3xl p-6 bg-white rotate-1 space-y-3">
                 <span className="inline-block px-3 py-1 rounded-full bg-[#F15B48] text-white border border-[#2B1E1A] text-xs font-extrabold">
-                  OFFICIAL REQUEST 📜
+                  {content.friend_section.official_request_badge}
                 </span>
                 <h3 className="font-display text-2xl text-[#2B1E1A]">
                   {content.friend_section.official_request_title}
@@ -1132,7 +1140,7 @@ export default function App() {
                 <div>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2B1E1A] text-[#FFC928] text-xs font-extrabold">
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>PRIVATE SIGNED-URL VAULT</span>
+                    <span>{content.friend_section.private_gallery_badge}</span>
                   </span>
                   <h2 className="font-display text-2xl sm:text-3xl text-[#2B1E1A] mt-2">
                     {content.friend_section.private_gallery_title}
@@ -1211,7 +1219,7 @@ export default function App() {
                   className="storybook-btn px-5 py-3 rounded-2xl bg-white text-[#2B1E1A] font-display text-base flex items-center gap-2 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  <span>Back to Homepage</span>
+                  <span>{content.global_text.back_to_home_label}</span>
                 </button>
 
                 {content.bro_visible && !visitedBro && (
@@ -1221,7 +1229,7 @@ export default function App() {
                     className="storybook-btn px-5 py-3 rounded-2xl bg-[#FFC928] text-[#2B1E1A] font-display text-base flex items-center gap-2 cursor-pointer"
                   >
                     <Heart className="w-4 h-4 fill-[#F15B48] text-[#F15B48]" />
-                    <span>Read Wishes from your Bro →</span>
+                    <span>Read {content.homepage.bro_button_label} →</span>
                   </button>
                 )}
 
@@ -1252,7 +1260,7 @@ export default function App() {
             <div className="text-center space-y-2">
               <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#F15B48] text-white border-2 border-[#2B1E1A] text-xs font-extrabold shadow-[2px_2px_0px_#2B1E1A]">
                 <Heart className="w-3.5 h-3.5 fill-current" />
-                <span>FINAL SURPRISE • FOR YOUR EYES ONLY</span>
+                <span>{content.final_surprise.header_badge}</span>
               </span>
               <h1 className="font-display text-3xl sm:text-5xl text-[#2B1E1A] pt-2">
                 {content.final_surprise.heading}
@@ -1280,7 +1288,7 @@ export default function App() {
                 className="storybook-btn inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[#FFC928] text-[#2B1E1A] font-display text-lg cursor-pointer"
               >
                 <ArrowLeft className="w-5 h-5" />
-                <span>Back to Homepage</span>
+                <span>{content.global_text.back_to_home_label}</span>
               </button>
             </div>
           </div>
@@ -1297,14 +1305,14 @@ export default function App() {
             onClick={(e) => e.stopPropagation()}
             className="scrapbook-card rounded-3xl max-w-3xl w-full overflow-hidden bg-white"
           >
-            <div className="bg-[#2B1E1A] flex items-center justify-center max-h-[70vh] relative overflow-hidden">
+            <div className="relative bg-black flex items-center justify-center max-h-[70vh]">
               {lightboxItem.media_type === 'video' ? (
                 <video
                   src={lightboxItem.signed_url || ''}
                   controls
                   autoPlay
                   playsInline
-                  className="max-h-[70vh] w-full"
+                  className="max-h-[70vh] w-auto"
                 />
               ) : (
                 <img
@@ -1340,7 +1348,7 @@ export default function App() {
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Heart className="w-4 h-4 fill-[#F15B48] text-[#F15B48]" />
-            <span>Made with love for Lil Debbie ❤️</span>
+            <span>{content.global_text.footer_text}</span>
           </div>
           <div className="flex items-center gap-3">
             {stage !== 'home' && (

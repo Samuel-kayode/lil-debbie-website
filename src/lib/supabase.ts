@@ -29,13 +29,19 @@ export type MediaSectionType =
 
 export const MEDIA_SECTION_LABELS: Record<
   MediaSectionType,
-  { label: string; group: 'Bro Section' | 'Friend Section' | 'Background Music' | 'Final Surprise'; acceptedTypes: string; description: string }
+  {
+    label: string;
+    group: 'Bro Section' | 'Friend Section' | 'Background Music' | 'Final Surprise';
+    acceptedTypes: string;
+    description: string;
+  }
 > = {
   bro_photo: {
     label: 'Bro Section — Individual Photograph',
     group: 'Bro Section',
     acceptedTypes: 'image/*',
-    description: 'Her individual photographs displayed in the Bro Section scrapbook gallery with sweet, funny & playful captions.',
+    description:
+      'Her individual photographs displayed in the Bro Section scrapbook gallery with sweet, funny & playful captions.',
   },
   bro_voice: {
     label: 'Bro Section — Voice Recording (Audio Player)',
@@ -47,7 +53,8 @@ export const MEDIA_SECTION_LABELS: Record<
     label: 'Friend Section — The Red-Gown Dancing Video',
     group: 'Friend Section',
     acceptedTypes: 'video/*',
-    description: 'The funny video of her in a red gown singing and dancing while a different song played.',
+    description:
+      'The funny video of her in a red gown singing and dancing while a different song played.',
   },
   friend_morning_voice: {
     label: 'Friend Section — Morning "Hi Baby" Voice Note',
@@ -59,25 +66,29 @@ export const MEDIA_SECTION_LABELS: Record<
     label: 'Friend Section — Everyday Photo / Video Update',
     group: 'Friend Section',
     acceptedTypes: 'image/*,video/*',
-    description: 'Spontaneous everyday updates she sends without you asking (new hairstyles, tired face, daily glimpses).',
+    description:
+      'Spontaneous everyday updates she sends without you asking (new hairstyles, tired face, daily glimpses).',
   },
   friend_private_gallery: {
     label: 'Friend Section — Private Intimate Gallery (Photo / Video)',
     group: 'Friend Section',
     acceptedTypes: 'image/*,video/*',
-    description: 'Private, intimate-but-non-nude photographs and videos protected by signed URLs.',
+    description:
+      'Private, intimate-but-non-nude photographs and videos protected by signed URLs.',
   },
   background_music: {
     label: 'Global — Birthday Background Music',
     group: 'Background Music',
     acceptedTypes: 'audio/*',
-    description: 'Background soundtrack controlled by the visitor play/pause music bar (never forced to autoplay with sound).',
+    description:
+      'Background soundtrack controlled by the visitor play/pause music bar (never forced to autoplay with sound).',
   },
   final_surprise: {
     label: 'Final Surprise — Vault Tag (Note: Final Surprise view is Written Letter Only)',
     group: 'Final Surprise',
     acceptedTypes: 'image/*,video/*,audio/*',
-    description: 'Organised under Final Surprise in the dashboard vault (the Final Surprise page itself remains a written letter only).',
+    description:
+      'Organised under Final Surprise in the dashboard vault (the Final Surprise page itself remains a written letter only).',
   },
 };
 
@@ -90,45 +101,99 @@ export interface BirthdayContentConfig {
   friend_visible: boolean;
   final_surprise_visible: boolean;
   require_both_sections_visited: boolean;
+  global_text: {
+    header_badge: string;
+    back_to_home_label: string;
+    footer_text: string;
+  };
+  gate_section: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    input_placeholder: string;
+    button_label: string;
+  };
   homepage: {
+    hero_badge: string;
     headline: string;
     paragraph_1: string;
     paragraph_2: string;
     paragraph_3: string;
     bro_button_label: string;
     friend_button_label: string;
+    secret_star_label: string;
+    secret_star_message: string;
+    surprise_unlocked_badge: string;
+    surprise_unlocked_title: string;
+    surprise_unlocked_subtitle: string;
+    surprise_unlocked_button: string;
+    surprise_locked_badge: string;
+    surprise_locked_message: string;
   };
   bro_section: {
     is_draft_for_review: boolean;
+    header_badge: string;
     opening_title: string;
     opening_subtitle: string;
+    letter_card_heading: string;
+    letter_card_subheading: string;
     letter_draft: string;
+    letter_signoff: string;
+    gallery_badge: string;
+    gallery_heading: string;
+    gallery_subtitle: string;
+    placeholder_caption_1: string;
+    placeholder_caption_2: string;
+    placeholder_caption_3: string;
     voice_note_heading: string;
     voice_note_caption: string;
+    secret_note_label: string;
+    secret_note_message: string;
     closing_message: string;
   };
   friend_section: {
+    header_badge: string;
     opening_line: string;
     opening_subtext: string;
+    compliment_1_text: string;
+    red_gown_badge: string;
     red_gown_heading: string;
+    red_gown_placeholder_title: string;
+    red_gown_placeholder_body: string;
     red_gown_caption: string;
-    morning_voice_heading: string;
-    morning_voice_body: string;
-    spontaneous_updates_heading: string;
-    spontaneous_updates_body: string;
+    tiny_hands_badge: string;
     tiny_hands_title: string;
     tiny_hands_body: string;
+    tiny_hands_secret_label: string;
+    tiny_hands_secret_message: string;
+    smile_laugh_badge: string;
+    smile_laugh_title: string;
+    smile_laugh_body: string;
+    smile_laugh_footer: string;
+    morning_voice_heading: string;
+    morning_voice_body: string;
+    spontaneous_updates_badge: string;
+    spontaneous_updates_heading: string;
+    spontaneous_updates_body: string;
+    everyday_placeholder_1_badge: string;
+    everyday_placeholder_1_caption: string;
+    everyday_placeholder_2_badge: string;
+    everyday_placeholder_2_caption: string;
+    backside_joke_badge: string;
     backside_joke_title: string;
     backside_joke_body: string;
+    official_request_badge: string;
     official_request_title: string;
     official_request_body: string;
     difficult_day_title: string;
     difficult_day_body: string;
+    private_gallery_badge: string;
     private_gallery_title: string;
     private_gallery_subtitle: string;
     closing_message: string;
   };
   final_surprise: {
+    header_badge: string;
     heading: string;
     letter_exact: string;
   };
@@ -157,7 +222,21 @@ export const DEFAULT_BIRTHDAY_CONTENT: BirthdayContentConfig = {
   friend_visible: true,
   final_surprise_visible: true,
   require_both_sections_visited: true,
+  global_text: {
+    header_badge: 'Lil Debbie’s Day',
+    back_to_home_label: 'Back to Homepage',
+    footer_text: 'Made with love for Lil Debbie ❤️',
+  },
+  gate_section: {
+    badge: 'PRIVATE BIRTHDAY EXPERIENCE',
+    title: 'Something Special For Lil Debbie ❤️',
+    subtitle:
+      'Enter your special birthday passcode below to unlock your birthday surprise.',
+    input_placeholder: 'Enter birthday passcode...',
+    button_label: 'Open My Birthday Surprise ❤️',
+  },
   homepage: {
+    hero_badge: 'CELEBRATING YOU TODAY & ALWAYS',
     headline: 'Happy Birthday, My Lil Debbie! ❤️',
     paragraph_1:
       "Today is not just another birthday. It's a special day for someone who has occupied a very interesting place in my life. 😂❤️",
@@ -166,12 +245,26 @@ export const DEFAULT_BIRTHDAY_CONTENT: BirthdayContentConfig = {
     paragraph_3: "So, take your time, Lil Debbie. This one's yours.",
     bro_button_label: 'Wishes from your Bro.',
     friend_button_label: 'Wishes from your Friend.',
+    secret_star_label: 'Tap This Birthday Star for a Little Secret ⭐',
+    secret_star_message:
+      "Psst... make sure you visit BOTH 'Wishes from your Bro' and 'Wishes from your Friend'—something very special unlocks at the end once you've seen both! ❤️",
+    surprise_unlocked_badge: 'FINAL SURPRISE UNLOCKED!',
+    surprise_unlocked_title: 'One Last Letter Is Waiting For You ❤️',
+    surprise_unlocked_subtitle:
+      'You’ve explored both chapters. Whenever you’re ready, open your final birthday surprise.',
+    surprise_unlocked_button: 'Read Your Final Surprise Letter ❤️',
+    surprise_locked_badge: 'FINAL SURPRISE LOCKED',
+    surprise_locked_message:
+      'Explore both Wishes from your Bro and Wishes from your Friend first to unlock your Final Surprise letter!',
   },
   bro_section: {
     is_draft_for_review: true,
+    header_badge: 'CHAPTER ONE • WISHES FROM YOUR BRO',
     opening_title: 'From Your Bro — With All My Heart',
     opening_subtitle:
       'Before the teasing starts, here are the things your big bro needs you to know today.',
+    letter_card_heading: 'A Letter From Your Big Bro',
+    letter_card_subheading: 'For My Sister, Lil Debbie ❤️',
     letter_draft: `My dearest Lil Debbie,
 
 Happy birthday! Looking at the person you are today makes me genuinely proud. One of the first things anyone notices about you—and one of the things I admire most—is your kindness and compassion. You don't condemn people easily, and whenever you are in a position to help someone, your heart is always open and willing.
@@ -185,37 +278,76 @@ Having you come into my life has truly been one of my biggest joys. You've even 
 Sometimes I catch myself imagining what it would be like to have you around more often, sharing more of the simple everyday moments side by side—and I am so deeply grateful that life gave me you as my sister.
 
 No matter what season of life we are in, please remember this: I am here for you whenever you need me, now and always.`,
+    letter_signoff: 'Always in your corner, Your Bro ❤️',
+    gallery_badge: 'SCRAPBOOK MEMORIES',
+    gallery_heading: 'Snapshots of My Favourite Sister 📸',
+    gallery_subtitle: 'Tap any photograph to open it full-screen.',
+    placeholder_caption_1:
+      'That effortless smile that warms up the whole room before you even say a word. ❤️',
+    placeholder_caption_2:
+      'The exact face of someone pretending she is completely innocent after causing chaos. 😂',
+    placeholder_caption_3:
+      'Growing stronger, wiser, and more radiant every single year—proud of you always, sis! ✨',
     voice_note_heading: 'A Voice Note From Your Bro 🎙️',
     voice_note_caption:
       'Press play whenever you are ready to hear my birthday message for you.',
+    secret_note_label: 'Tap for an Extra Big-Bro Reminder 💌',
+    secret_note_message:
+      'No matter how busy life gets or where we both are, you will always have a brother who is proud of your heart and ready to listen whenever you call. ❤️',
     closing_message:
       'Thank you for being the kind, strong, wonderful sister you are, Lil Debbie. Your Bro always has your back. ❤️',
   },
   friend_section: {
+    header_badge: 'CHAPTER TWO • WISHES FROM YOUR FRIEND',
     opening_line: 'Oh, so you made it here! 😂',
     opening_subtext:
       'Welcome to the side of the website where I get to tease you properly—just like we always do.',
+    compliment_1_text:
+      'Before I even start roasting you today, let’s give credit where it’s due: between that glowing fair skin, those captivating eyes of yours, and that cute small pointy nose I love teasing you about, you really do know how to look effortlessly stunning. 😍✨',
+    red_gown_badge: 'HALL OF FAME MOMENT 💃🏽',
     red_gown_heading: 'The Legendary Red-Gown Concert 💃🏽🎶',
+    red_gown_placeholder_title: 'Red-Gown Dancing Video Slot Ready',
+    red_gown_placeholder_body:
+      'Reserved exclusively for the actual video of you in your red gown singing and dancing while a completely different song played in the background!',
     red_gown_caption:
       "The day music betrayed you 😂 I still don't know which song you were dancing to, but the confidence was 10/10.",
-    morning_voice_heading: 'Those 6:00 AM "Hi Baby" Voice Notes ☀️🎧',
-    morning_voice_body:
-      'One of my absolute favourite parts of waking up is seeing your morning voice notes waiting for me around 6am—hearing you start with "Hi baby," telling me where you\'re heading or what you\'re about to do, and wishing me a nice day. You have no idea how much warmth that adds to my mornings.',
-    spontaneous_updates_heading: 'Your Unprompted Daily Updates 📸✨',
-    spontaneous_updates_body:
-      "Can we talk about how you send me pictures and videos without me even asking? Your new hairstyles, your tired-face videos after a long day, little updates when you're having a rough moment, and random glimpses of your everyday life. Honestly, that is one of the best behaviours I've ever experienced, and every single one of them makes me smile.",
+    tiny_hands_badge: 'SERIOUS QUESTION 🥊😂',
     tiny_hands_title: 'Wait—Before You Threaten to Beat Anyone... 🥊😂',
     tiny_hands_body:
       'Every time you get worked up and threaten that you\'re going to beat someone, I only have one question for you: "Which hand?" Because let\'s be honest, with those tiny hands of yours, the threat level is questionable at best! 😂',
+    tiny_hands_secret_label: 'Tap to Hear My Verdict on Your "Punches" 😂',
+    tiny_hands_secret_message:
+      '"Which hand?" — Still undefeated! Those tiny hands were built for holding cake, not fighting anybody. 😂❤️',
+    smile_laugh_badge: 'MY FAVOURITE SOUND 😍',
+    smile_laugh_title: 'That Smile, That Mouth & That Contagious Laugh',
+    smile_laugh_body:
+      'Even when you’re pretending to be tough, it takes about three seconds before that sweet mouth of yours curves into a smile. And your laugh? Honestly, your laugh is so contagious that the moment you start laughing, I can’t help laughing right along with you.',
+    smile_laugh_footer: '10/10 smile every single time ❤️',
+    morning_voice_heading: 'Those 6:00 AM "Hi Baby" Voice Notes ☀️🎧',
+    morning_voice_body:
+      'One of my absolute favourite parts of waking up is seeing your morning voice notes waiting for me around 6am—hearing you start with "Hi baby," telling me where you\'re heading or what you\'re about to do, and wishing me a nice day. You have no idea how much warmth that adds to my mornings.',
+    spontaneous_updates_badge: 'BEST BEHAVIOUR AWARD 🏆',
+    spontaneous_updates_heading: 'Your Unprompted Daily Updates 📸✨',
+    spontaneous_updates_body:
+      "Can we talk about how you send me pictures and videos without me even asking? Your new hairstyles, your tired-face videos after a long day, little updates when you're having a rough moment, and random glimpses of your everyday life. Honestly, that is one of the best behaviours I've ever experienced, and every single one of them makes me smile.",
+    everyday_placeholder_1_badge: 'New Hairstyle Alert 💇🏽‍♀️',
+    everyday_placeholder_1_caption:
+      'Reserved for your unprompted hairstyle reveal updates that always brighten my phone screen.',
+    everyday_placeholder_2_badge: 'After-Work Tired Face 😮‍💨❤️',
+    everyday_placeholder_2_caption:
+      'Reserved for those cute "I am exhausted" everyday updates you send without me even asking.',
+    backside_joke_badge: 'FACT CHECK ✔️',
     backside_joke_title: 'Case Closed on Your Complaint 😌✨',
     backside_joke_body:
       "And while we are settling scores: please stop complaining that you don't have a big backside! Like I always tell you, your ass is good enough—more than good enough, actually. Your figure is gorgeous just the way you are, so I don't want to hear any more complaints from you.",
+    official_request_badge: 'OFFICIAL REQUEST 📜',
     official_request_title: 'An Official Birthday Request 📜😂',
     official_request_body:
       'Consider this an official, non-negotiable birthday request: I need plenty more funny videos this year—especially more masterpieces like the red-gown dancing video—plus all the random pictures, hairstyle reveals, and everyday updates.',
     difficult_day_title: 'One Gentle Promise Between Friends 🤍',
     difficult_day_body:
       "On a softer note: I felt really bad when you told me you had cried in the office after a difficult day and didn't call me. You never have to carry heavy moments all by yourself or wait until everything feels okay before reaching out. Next time you're having a hard day, please call me—even if all you want to do is talk or vent for just a few minutes. I'm always in your corner.",
+    private_gallery_badge: 'PRIVATE SIGNED-URL VAULT',
     private_gallery_title: 'Our Private Keepsake Gallery 🔒✨',
     private_gallery_subtitle:
       'A private collection of your special moments, protected and just for us.',
@@ -223,6 +355,7 @@ No matter what season of life we are in, please remember this: I am here for you
       'Never stop being the funny, stunning, expressive, sweet trouble that you are. Happy Birthday, my favourite friend! 😂❤️',
   },
   final_surprise: {
+    header_badge: 'FINAL SURPRISE • FOR YOUR EYES ONLY',
     heading: 'One Last Thing From My Heart...',
     letter_exact: EXACT_APPROVED_FINAL_SURPRISE_LETTER,
   },
@@ -283,6 +416,14 @@ export function mergeBirthdayContent(
   return {
     ...DEFAULT_BIRTHDAY_CONTENT,
     ...partial,
+    global_text: {
+      ...DEFAULT_BIRTHDAY_CONTENT.global_text,
+      ...(partial.global_text || {}),
+    },
+    gate_section: {
+      ...DEFAULT_BIRTHDAY_CONTENT.gate_section,
+      ...(partial.gate_section || {}),
+    },
     homepage: {
       ...DEFAULT_BIRTHDAY_CONTENT.homepage,
       ...(partial.homepage || {}),
@@ -298,7 +439,6 @@ export function mergeBirthdayContent(
     final_surprise: {
       ...DEFAULT_BIRTHDAY_CONTENT.final_surprise,
       ...(partial.final_surprise || {}),
-      // Always keep the exact approved final surprise letter unless explicitly overridden
       letter_exact:
         partial.final_surprise?.letter_exact || EXACT_APPROVED_FINAL_SURPRISE_LETTER,
     },
